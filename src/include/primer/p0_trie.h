@@ -13,13 +13,13 @@
 #pragma once
 
 #include <memory>
+#include <stack>
 #include <stdexcept>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include <stack>
-#include <tuple>
 
 #include "common/exception.h"
 #include "common/rwlatch.h"
@@ -72,9 +72,7 @@ class TrieNode {
    * @param key_char Key char of child node.
    * @return True if this trie node has a child with given key, false otherwise.
    */
-  bool HasChild(char key_char) const {
-    return children_.find(key_char) != children_.end();
-  }
+  bool HasChild(char key_char) const { return children_.find(key_char) != children_.end(); }
 
   /**
    * TODO(P0): Add implementation
@@ -84,9 +82,7 @@ class TrieNode {
    *
    * @return True if this trie node has any child node, false if it has no child node.
    */
-  bool HasChildren() const {
-    return !children_.empty();
-  }
+  bool HasChildren() const { return !children_.empty(); }
 
   /**
    * TODO(P0): Add implementation
@@ -95,9 +91,7 @@ class TrieNode {
    *
    * @return True if is_end_ flag is true, false if is_end_ is false.
    */
-  bool IsEndNode() const {
-    return is_end_;
-  }
+  bool IsEndNode() const { return is_end_; }
 
   /**
    * TODO(P0): Add implementation
@@ -106,9 +100,7 @@ class TrieNode {
    *
    * @return key_char_ of this trie node.
    */
-  char GetKeyChar() const {
-    return key_char_;
-  }
+  char GetKeyChar() const { return key_char_; }
 
   /**
    * TODO(P0): Add implementation
@@ -177,9 +169,7 @@ class TrieNode {
    *
    * @param is_end Whether this trie node is ending char of a key string
    */
-  void SetEndNode(bool is_end) {
-    is_end_ = is_end;
-  }
+  void SetEndNode(bool is_end) { is_end_ = is_end; }
 
  protected:
   /** Key character of this trie node */
@@ -372,7 +362,7 @@ class Trie {
 
     latch_.WLock();
 
-    std::stack<std::tuple<char, std::unique_ptr<TrieNode>*>> s;
+    std::stack<std::tuple<char, std::unique_ptr<TrieNode> *>> s;
     auto c = key.begin();
     auto pre_child = &root_;
     while (c != key.end()) {
@@ -436,7 +426,7 @@ class Trie {
       }
 
       if (next_node->get()->IsEndNode() && c == key.end()) {
-        auto flag_node = dynamic_cast<TrieNodeWithValue<T>*>(next_node->get());
+        auto flag_node = dynamic_cast<TrieNodeWithValue<T> *>(next_node->get());
         if (!flag_node) {
           *success = false;
           break;
