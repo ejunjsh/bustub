@@ -23,7 +23,9 @@ namespace bustub {
 
 template <typename K, typename V>
 ExtendibleHashTable<K, V>::ExtendibleHashTable(size_t bucket_size)
-    : global_depth_(0), bucket_size_(bucket_size), num_buckets_(1) {}
+    : global_depth_(0), bucket_size_(bucket_size), num_buckets_(1) {
+  dir_.push_back(std::make_shared<Bucket>(bucket_size, 0));
+}
 
 template <typename K, typename V>
 auto ExtendibleHashTable<K, V>::IndexOf(const K &key) -> size_t {
@@ -66,17 +68,78 @@ auto ExtendibleHashTable<K, V>::GetNumBucketsInternal() const -> int {
 
 template <typename K, typename V>
 auto ExtendibleHashTable<K, V>::Find(const K &key, V &value) -> bool {
-  UNREACHABLE("not implemented");
+  std::scoped_lock<std::mutex> lock(latch_);
+
+  auto index = IndexOf(key);
+  auto target_bucket = dir_[index];
+
+  return target_bucket->Find(key, value);
 }
 
 template <typename K, typename V>
 auto ExtendibleHashTable<K, V>::Remove(const K &key) -> bool {
-  UNREACHABLE("not implemented");
+  std::scoped_lock<std::mutex> lock(latch_);
+
+  auto index = IndexOf(key);
+  auto target_bucket = dir_[index];
+
+  return target_bucket->Remove(key);
 }
 
 template <typename K, typename V>
 void ExtendibleHashTable<K, V>::Insert(const K &key, const V &value) {
-  UNREACHABLE("not implemented");
+  std::scoped_lock<std::mutex> lock(latch_);
+
+  while (dir_[IndexOf(key)]->IsFull()) {
+    auto index = IndexOf(key);
+    auto target_bucket = dir_[index];
+
+    if (target_bucket->GetDepth() == GetGlobalDepthInternal()) {
+      global_depth_++;
+      int capacity = dir_.size();
+      dir_.resize(capacity << 1);
+      for (int i = 0; i < capacity; i++) {
+        dir_[i + capacity] = dir_[i];
+      }
+    }
+
+    int mask = 1 << target_bucket->GetDepth();
+    auto bucket_0 = std::make_shared<Bucket>(bucket_size_, target_bucket->GetDepth() + 1);
+    auto bucket_1 = std::make_shared<Bucket>(bucket_size_, target_bucket->GetDepth() + 1);
+
+    for (const auto &item : target_bucket->GetItems()) {
+      size_t hash_key = std::hash<K>()(item.first);
+      if ((hash_key & mask) != 0U) {
+        bucket_1->Insert(item.first, item.second);
+      } else {
+        bucket_0->Insert(item.first, item.second);
+      }
+    }
+
+    num_buckets_++;
+
+    for (size_t i = 0; i < dir_.size(); i++) {
+      if (dir_[i] == target_bucket) {
+        if ((i & mask) != 0U) {
+          dir_[i] = bucket_1;
+        } else {
+          dir_[i] = bucket_0;
+        }
+      }
+    }
+  }
+
+  auto index = IndexOf(key);
+  auto target_bucket = dir_[index];
+
+  for (auto &item : target_bucket->GetItems()) {
+    if (item.first == key) {
+      item.second = value;
+      return;
+    }
+  }
+
+  target_bucket->Insert(key, value);
 }
 
 //===--------------------------------------------------------------------===//
@@ -87,17 +150,33 @@ ExtendibleHashTable<K, V>::Bucket::Bucket(size_t array_size, int depth) : size_(
 
 template <typename K, typename V>
 auto ExtendibleHashTable<K, V>::Bucket::Find(const K &key, V &value) -> bool {
-  UNREACHABLE("not implemented");
+  return std::any_of(list_.begin(), list_.end(), [&key, &value](const auto &item) {
+    if (item.first == key) {
+      value = item.second;
+      return true;
+    }
+    return false;
+  });
 }
 
 template <typename K, typename V>
 auto ExtendibleHashTable<K, V>::Bucket::Remove(const K &key) -> bool {
-  UNREACHABLE("not implemented");
+  return std::any_of(list_.begin(), list_.end(), [&key, this](const auto &item) {
+    if (item.first == key) {
+      this->list_.remove(item);
+      return true;
+    }
+    return false;
+  });
 }
 
 template <typename K, typename V>
 auto ExtendibleHashTable<K, V>::Bucket::Insert(const K &key, const V &value) -> bool {
-  UNREACHABLE("not implemented");
+  if (IsFull()) {
+    return false;
+  }
+  list_.emplace_back(key, value);
+  return true;
 }
 
 template class ExtendibleHashTable<page_id_t, Page *>;
