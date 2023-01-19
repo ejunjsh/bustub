@@ -60,8 +60,8 @@ auto BufferPoolManagerInstance::NewPgImp(page_id_t *page_id) -> Page * {
     frame_id = free_list_.front();
     free_list_.pop_front();
   } else {
-    assert(replacer_->Evict(&frame_id));
-
+    // assert(replacer_->Evict(&frame_id));
+    replacer_->Evict(&frame_id);
     page_id_t evicted_page_id = pages_[frame_id].GetPageId();
 
     if (pages_[frame_id].IsDirty()) {
@@ -112,8 +112,8 @@ auto BufferPoolManagerInstance::FetchPgImp(page_id_t page_id) -> Page * {
     frame_id = free_list_.front();
     free_list_.pop_front();
   } else {
-    assert(replacer_->Evict(&frame_id));
-
+    // assert(replacer_->Evict(&frame_id));
+    replacer_->Evict(&frame_id);
     page_id_t evicted_page_id = pages_[frame_id].GetPageId();
 
     if (pages_[frame_id].IsDirty()) {
