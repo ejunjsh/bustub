@@ -411,6 +411,9 @@ auto BPLUSTREE_TYPE::AdjustRoot(BPlusTreePage *old_root_node) -> bool {
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::Begin() -> INDEXITERATOR_TYPE {
+  if (root_page_id_ == INVALID_PAGE_ID) {
+    return INDEXITERATOR_TYPE(nullptr, nullptr);
+  }
   root_page_id_latch_.RLock();
   auto leftmost_page = FindLeaf(KeyType(), Operation::SEARCH, nullptr, true);
   return INDEXITERATOR_TYPE(buffer_pool_manager_, leftmost_page, 0);
@@ -423,6 +426,9 @@ auto BPLUSTREE_TYPE::Begin() -> INDEXITERATOR_TYPE {
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE {
+  if (root_page_id_ == INVALID_PAGE_ID) {
+    return INDEXITERATOR_TYPE(nullptr, nullptr);
+  }
   root_page_id_latch_.RLock();
   auto leaf_page = FindLeaf(key, Operation::SEARCH);
   auto *leaf_node = reinterpret_cast<LeafPage *>(leaf_page->GetData());
@@ -437,6 +443,9 @@ auto BPLUSTREE_TYPE::Begin(const KeyType &key) -> INDEXITERATOR_TYPE {
  */
 INDEX_TEMPLATE_ARGUMENTS
 auto BPLUSTREE_TYPE::End() -> INDEXITERATOR_TYPE {
+  if (root_page_id_ == INVALID_PAGE_ID) {
+    return INDEXITERATOR_TYPE(nullptr, nullptr);
+  }
   root_page_id_latch_.RLock();
   auto rightmost_page = FindLeaf(KeyType(), Operation::SEARCH, nullptr, false, true);
   auto *leaf_node = reinterpret_cast<LeafPage *>(rightmost_page->GetData());
