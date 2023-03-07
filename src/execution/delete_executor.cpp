@@ -49,7 +49,7 @@ auto DeleteExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
       bool is_locked = exec_ctx_->GetLockManager()->LockRow(
           exec_ctx_->GetTransaction(), LockManager::LockMode::EXCLUSIVE, table_info_->oid_, emit_rid);
       if (!is_locked) {
-        throw ExecutionException("Delete Executor Get Table Lock Failed");
+        throw ExecutionException("Delete Executor Get Row Lock Failed");
       }
     } catch (TransactionAbortException e) {
       throw ExecutionException("Delete Executor Get Row Lock Failed");

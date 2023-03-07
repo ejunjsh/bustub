@@ -52,7 +52,7 @@ auto InsertExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
         bool is_locked = exec_ctx_->GetLockManager()->LockRow(
             exec_ctx_->GetTransaction(), LockManager::LockMode::EXCLUSIVE, table_info_->oid_, *rid);
         if (!is_locked) {
-          throw ExecutionException("Insert Executor Get Table Lock Failed");
+          throw ExecutionException("Insert Executor Get Row Lock Failed");
         }
       } catch (TransactionAbortException e) {
         throw ExecutionException("Insert Executor Get Row Lock Failed");
