@@ -87,7 +87,7 @@ void BPLUSTREE_TYPE::StartNewTree(const KeyType &key, const ValueType &value) {
 
   buffer_pool_manager_->UnpinPage(page->GetPageId(), true);
 
-  UpdateRootPageId(1);
+  // UpdateRootPageId(1);
 }
 
 INDEX_TEMPLATE_ARGUMENTS

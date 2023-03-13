@@ -35,21 +35,24 @@ void SeqScanExecutor::Init() {
 }
 
 auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
-  if (table_iter_ == table_info_->table_->End()) {
-    if (exec_ctx_->GetTransaction()->GetIsolationLevel() == IsolationLevel::READ_COMMITTED) {
-      const auto locked_row_set = exec_ctx_->GetTransaction()->GetSharedRowLockSet()->at(table_info_->oid_);
-      table_oid_t oid = table_info_->oid_;
-      for (auto rid : locked_row_set) {
-        exec_ctx_->GetLockManager()->UnlockRow(exec_ctx_->GetTransaction(), oid, rid);
+  do {
+    if (table_iter_ == table_info_->table_->End()) {
+      if (exec_ctx_->GetTransaction()->GetIsolationLevel() == IsolationLevel::READ_COMMITTED) {
+        const auto locked_row_set = exec_ctx_->GetTransaction()->GetSharedRowLockSet()->at(table_info_->oid_);
+        table_oid_t oid = table_info_->oid_;
+        for (auto rid : locked_row_set) {
+          exec_ctx_->GetLockManager()->UnlockRow(exec_ctx_->GetTransaction(), oid, rid);
+        }
+
+        exec_ctx_->GetLockManager()->UnlockTable(exec_ctx_->GetTransaction(), table_info_->oid_);
       }
-
-      exec_ctx_->GetLockManager()->UnlockTable(exec_ctx_->GetTransaction(), table_info_->oid_);
+      return false;
     }
-    return false;
-  }
-
-  *tuple = *table_iter_;
-  *rid = tuple->GetRid();
+    *tuple = *table_iter_;
+    *rid = tuple->GetRid();
+    ++table_iter_;
+  } while (plan_->filter_predicate_ != nullptr &&
+           !plan_->filter_predicate_->Evaluate(tuple, table_info_->schema_).GetAs<bool>());
 
   if (exec_ctx_->GetTransaction()->GetIsolationLevel() != IsolationLevel::READ_UNCOMMITTED) {
     try {
@@ -62,8 +65,6 @@ auto SeqScanExecutor::Next(Tuple *tuple, RID *rid) -> bool {
       throw ExecutionException("SeqScan Executor Get Row Lock Failed");
     }
   }
-
-  ++table_iter_;
 
   return true;
 }

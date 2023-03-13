@@ -48,5 +48,7 @@ class IndexScanExecutor : public AbstractExecutor {
   const TableInfo *table_info_;
   BPlusTreeIndexForOneIntegerColumn *tree_;
   BPlusTreeIndexIteratorForOneIntegerColumn iter_;
+  std::vector<RID> rids_;
+  std::vector<RID>::const_iterator rid_iter_{};
 };
 }  // namespace bustub

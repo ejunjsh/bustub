@@ -67,6 +67,12 @@ auto UpdateExecutor::Next([[maybe_unused]] Tuple *tuple, RID *rid) -> bool {
 
     if (updated) {
       // std::for_each(table_indexes_.begin(), table_indexes_.end(),
+      //               [&old_tuple, &rid, &table_info = table_info_, &exec_ctx = exec_ctx_](IndexInfo *index) {
+      //                 index->index_->DeleteEntry(old_tuple.KeyFromTuple(table_info->schema_, index->key_schema_,
+      //                                                                         index->index_->GetKeyAttrs()),
+      //                                            *rid, exec_ctx->GetTransaction());
+      //               });
+      // std::for_each(table_indexes_.begin(), table_indexes_.end(),
       //               [&to_update_tuple, &old_rid, &table_info = table_info_, &exec_ctx = exec_ctx_](IndexInfo *index)
       //               {
       //                 index->index_->InsertEntry(to_update_tuple.KeyFromTuple(table_info->schema_,

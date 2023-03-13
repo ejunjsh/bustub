@@ -106,6 +106,8 @@ class Optimizer {
 
   auto OptimizeRemoveColumn(const AbstractPlanNodeRef &plan) -> AbstractPlanNodeRef;
 
+  auto OptimizeMergeFilterIndexScan(const AbstractPlanNodeRef &plan) -> AbstractPlanNodeRef;
+
   /**
    * @brief get the estimated cardinality for a table based on the table name. Useful when join reordering. BusTub
    * doesn't support statistics for now, so it's the only way for you to get the table size :(
